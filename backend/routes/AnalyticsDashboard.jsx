@@ -1,23 +1,34 @@
 // components/Dashboard/AnalyticsDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
-import { TrendingUp, Award, Target, Zap } from 'lucide-react';
-import axios from 'axios';
-import './AnalyticsDashboard.css';
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { TrendingUp, Award, Target, Zap } from "lucide-react";
+import axios from "axios";
+import "./AnalyticsDashboard.css";
 
 const AnalyticsDashboard = () => {
   const [scoreData, setScoreData] = useState([]);
   const [winningsData, setWinningsData] = useState([]);
-  const [chartType, setChartType] = useState('line');
+  const [chartType, setChartType] = useState("line");
   const [stats, setStats] = useState({
     averageScore: 0,
     highestScore: 0,
     totalWinnings: 0,
     winRate: 0,
-    streakDays: 0
+    streakDays: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -28,8 +39,8 @@ const AnalyticsDashboard = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/dashboard/analytics', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      const response = await axios.get("/api/dashboard/analytics", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
       const { scores, winnings, statistics } = response.data;
@@ -39,31 +50,31 @@ const AnalyticsDashboard = () => {
         .sort((a, b) => new Date(a.date) - new Date(b.date))
         .slice(-30)
         .map(score => ({
-          date: new Date(score.date).toLocaleDateString('en-IN', {
-            month: 'short',
-            day: 'numeric'
+          date: new Date(score.date).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
           }),
           score: score.score,
-          status: score.score >= 30 ? 'high' : 'normal'
+          status: score.score >= 30 ? "high" : "normal",
         }));
 
       // Format winnings data
       const formattedWinnings = winnings
         .sort((a, b) => new Date(a.drawDate) - new Date(b.drawDate))
         .map(win => ({
-          date: new Date(win.drawDate).toLocaleDateString('en-IN', {
-            month: 'short',
-            day: 'numeric'
+          date: new Date(win.drawDate).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
           }),
           amount: win.prizeAmount,
-          tier: win.tier
+          tier: win.tier,
         }));
 
       setScoreData(formattedScores);
       setWinningsData(formattedWinnings);
       setStats(statistics);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      console.error("Error fetching analytics:", error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +94,10 @@ const AnalyticsDashboard = () => {
       {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
+          <div
+            className="stat-icon"
+            style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}
+          >
             <Target size={24} />
           </div>
           <div className="stat-content">
@@ -94,7 +108,10 @@ const AnalyticsDashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+          <div
+            className="stat-icon"
+            style={{ background: "linear-gradient(135deg, #8b5cf6, #7c3aed)" }}
+          >
             <Award size={24} />
           </div>
           <div className="stat-content">
@@ -105,18 +122,26 @@ const AnalyticsDashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #fbbf24, #f97316)' }}>
+          <div
+            className="stat-icon"
+            style={{ background: "linear-gradient(135deg, #fbbf24, #f97316)" }}
+          >
             <Zap size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Winnings</p>
-            <h3 className="stat-value">₹{stats.totalWinnings.toLocaleString()}</h3>
+            <h3 className="stat-value">
+              ₹{stats.totalWinnings.toLocaleString()}
+            </h3>
             <span className="stat-unit">All-time earnings</span>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+          <div
+            className="stat-icon"
+            style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+          >
             <TrendingUp size={24} />
           </div>
           <div className="stat-content">
@@ -135,14 +160,14 @@ const AnalyticsDashboard = () => {
             <h2>⛳ Score Trend (Last 30)</h2>
             <div className="chart-controls">
               <button
-                className={chartType === 'line' ? 'active' : ''}
-                onClick={() => setChartType('line')}
+                className={chartType === "line" ? "active" : ""}
+                onClick={() => setChartType("line")}
               >
                 Line Chart
               </button>
               <button
-                className={chartType === 'bar' ? 'active' : ''}
-                onClick={() => setChartType('bar')}
+                className={chartType === "bar" ? "active" : ""}
+                onClick={() => setChartType("bar")}
               >
                 Bar Chart
               </button>
@@ -150,18 +175,21 @@ const AnalyticsDashboard = () => {
           </div>
           {scoreData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              {chartType === 'line' ? (
+              {chartType === "line" ? (
                 <LineChart data={scoreData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(226, 232, 240, 0.1)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(226, 232, 240, 0.1)"
+                  />
                   <XAxis dataKey="date" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" domain={[0, 45]} />
                   <Tooltip
                     contentStyle={{
-                      background: '#1e293b',
-                      border: '1px solid #64748b',
-                      borderRadius: '8px'
+                      background: "#1e293b",
+                      border: "1px solid #64748b",
+                      borderRadius: "8px",
                     }}
-                    cursor={{ stroke: '#3b82f6' }}
+                    cursor={{ stroke: "#3b82f6" }}
                   />
                   <Legend />
                   <Line
@@ -169,20 +197,23 @@ const AnalyticsDashboard = () => {
                     dataKey="score"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    dot={{ fill: '#3b82f6', r: 4 }}
+                    dot={{ fill: "#3b82f6", r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>
               ) : (
                 <BarChart data={scoreData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(226, 232, 240, 0.1)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(226, 232, 240, 0.1)"
+                  />
                   <XAxis dataKey="date" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" domain={[0, 45]} />
                   <Tooltip
                     contentStyle={{
-                      background: '#1e293b',
-                      border: '1px solid #64748b',
-                      borderRadius: '8px'
+                      background: "#1e293b",
+                      border: "1px solid #64748b",
+                      borderRadius: "8px",
                     }}
                   />
                   <Bar dataKey="score" fill="#3b82f6" radius={[8, 8, 0, 0]} />
@@ -190,7 +221,9 @@ const AnalyticsDashboard = () => {
               )}
             </ResponsiveContainer>
           ) : (
-            <div className="no-data">No score data available. Start entering your scores!</div>
+            <div className="no-data">
+              No score data available. Start entering your scores!
+            </div>
           )}
         </div>
 
@@ -202,14 +235,17 @@ const AnalyticsDashboard = () => {
           {winningsData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={winningsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(226, 232, 240, 0.1)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(226, 232, 240, 0.1)"
+                />
                 <XAxis dataKey="date" stroke="#94a3b8" />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip
                   contentStyle={{
-                    background: '#1e293b',
-                    border: '1px solid #64748b',
-                    borderRadius: '8px'
+                    background: "#1e293b",
+                    border: "1px solid #64748b",
+                    borderRadius: "8px",
                   }}
                 />
                 <Bar dataKey="amount" fill="#fbbf24" radius={[8, 8, 0, 0]} />
@@ -238,15 +274,15 @@ const AnalyticsDashboard = () => {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {['#3b82f6', '#8b5cf6', '#ec4899'].map((color, index) => (
+                  {["#3b82f6", "#8b5cf6", "#ec4899"].map((color, index) => (
                     <Cell key={`cell-${index}`} fill={color} />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: '#1e293b',
-                    border: '1px solid #64748b',
-                    borderRadius: '8px'
+                    background: "#1e293b",
+                    border: "1px solid #64748b",
+                    borderRadius: "8px",
                   }}
                 />
               </PieChart>
@@ -264,24 +300,32 @@ const AnalyticsDashboard = () => {
           <div className="insight-card">
             <p className="insight-title">🔥 Current Streak</p>
             <p className="insight-value">{stats.streakDays} days</p>
-            <p className="insight-desc">Keep entering scores to maintain your streak!</p>
+            <p className="insight-desc">
+              Keep entering scores to maintain your streak!
+            </p>
           </div>
 
           <div className="insight-card">
             <p className="insight-title">📈 Improvement</p>
-            <p className="insight-value">+{calculateImprovement(scoreData).toFixed(1)}%</p>
+            <p className="insight-value">
+              +{calculateImprovement(scoreData).toFixed(1)}%
+            </p>
             <p className="insight-desc">Your score is improving over time</p>
           </div>
 
           <div className="insight-card">
             <p className="insight-title">🎲 Next Draw</p>
             <p className="insight-value">2 weeks</p>
-            <p className="insight-desc">Keep your scores updated for better chances!</p>
+            <p className="insight-desc">
+              Keep your scores updated for better chances!
+            </p>
           </div>
 
           <div className="insight-card">
             <p className="insight-title">❤️ Charity Impact</p>
-            <p className="insight-value">₹{(stats.totalWinnings * 0.1).toLocaleString()}</p>
+            <p className="insight-value">
+              ₹{(stats.totalWinnings * 0.1).toLocaleString()}
+            </p>
             <p className="insight-desc">Your charitable contribution so far</p>
           </div>
         </div>
@@ -291,11 +335,11 @@ const AnalyticsDashboard = () => {
 };
 
 // Helper functions
-const calculateTierDistribution = (winningsData) => {
+const calculateTierDistribution = winningsData => {
   const distribution = {
-    '5-Match': 0,
-    '4-Match': 0,
-    '3-Match': 0
+    "5-Match": 0,
+    "4-Match": 0,
+    "3-Match": 0,
   };
 
   winningsData.forEach(win => {
@@ -305,17 +349,19 @@ const calculateTierDistribution = (winningsData) => {
   return Object.entries(distribution).map(([name, value]) => ({ name, value }));
 };
 
-const renderTierLabel = (entry) => {
-  return entry.value > 0 ? `${entry.name} (${entry.value})` : '';
+const renderTierLabel = entry => {
+  return entry.value > 0 ? `${entry.name} (${entry.value})` : "";
 };
 
-const calculateImprovement = (scoreData) => {
+const calculateImprovement = scoreData => {
   if (scoreData.length < 2) return 0;
   const firstHalf = scoreData.slice(0, Math.floor(scoreData.length / 2));
   const secondHalf = scoreData.slice(Math.floor(scoreData.length / 2));
 
-  const avgFirst = firstHalf.reduce((sum, item) => sum + item.score, 0) / firstHalf.length;
-  const avgSecond = secondHalf.reduce((sum, item) => sum + item.score, 0) / secondHalf.length;
+  const avgFirst =
+    firstHalf.reduce((sum, item) => sum + item.score, 0) / firstHalf.length;
+  const avgSecond =
+    secondHalf.reduce((sum, item) => sum + item.score, 0) / secondHalf.length;
 
   return ((avgSecond - avgFirst) / avgFirst) * 100;
 };

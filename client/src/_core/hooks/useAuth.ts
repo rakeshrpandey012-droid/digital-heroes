@@ -22,7 +22,7 @@ export function useAuth() {
   const login = (role: "subscriber" | "admin" = "subscriber") => {
     const users = db.getUsers();
     const mockUser = users.find(u => u.role === role) || users[0];
-    
+
     localStorage.setItem("dh_auth_id", mockUser.id);
     setUser(mockUser);
     setIsAuthenticated(true);

@@ -1,12 +1,12 @@
 // routes/leaderboard.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Leaderboard = require('../models/Leaderboard');
-const User = require('../models/User');
-const auth = require('../middleware/auth');
+const Leaderboard = require("../models/Leaderboard");
+const User = require("../models/User");
+const auth = require("../middleware/auth");
 
 // GET leaderboard - all time / weekly / monthly
-router.get('/leaderboard/:timeframe', auth, async (req, res) => {
+router.get("/leaderboard/:timeframe", auth, async (req, res) => {
   try {
     const { timeframe } = req.params; // 'alltime', 'monthly', 'weekly'
     const { sortBy } = req.query; // 'winnings', 'scores', 'charity'
@@ -14,32 +14,34 @@ router.get('/leaderboard/:timeframe', auth, async (req, res) => {
     let dateFilter = {};
     const now = new Date();
 
-    if (timeframe === 'weekly') {
+    if (timeframe === "weekly") {
       dateFilter = {
-        $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
       };
-    } else if (timeframe === 'monthly') {
+    } else if (timeframe === "monthly") {
       dateFilter = {
-        $gte: new Date(now.getFullYear(), now.getMonth(), 1)
+        $gte: new Date(now.getFullYear(), now.getMonth(), 1),
       };
     }
 
     let leaderboard = [];
 
-    if (sortBy === 'winnings') {
+    if (sortBy === "winnings") {
       leaderboard = await User.aggregate([
         {
           $match: {
-            'subscription.status': 'active',
-            'winnings.updatedAt': dateFilter.length ? dateFilter : { $exists: true }
-          }
+            "subscription.status": "active",
+            "winnings.updatedAt": dateFilter.length
+              ? dateFilter
+              : { $exists: true },
+          },
         },
         {
           $addFields: {
             totalWinnings: {
-              $sum: '$winnings.amount'
-            }
-          }
+              $sum: "$winnings.amount",
+            },
+          },
         },
         { $sort: { totalWinnings: -1 } },
         { $limit: 100 },
@@ -50,29 +52,29 @@ router.get('/leaderboard/:timeframe', auth, async (req, res) => {
             lastName: 1,
             profileImage: 1,
             totalWinnings: 1,
-            'subscription.plan': 1,
-            'stats.totalScoresEntered': 1
-          }
-        }
+            "subscription.plan": 1,
+            "stats.totalScoresEntered": 1,
+          },
+        },
       ]);
-    } else if (sortBy === 'scores') {
+    } else if (sortBy === "scores") {
       leaderboard = await User.aggregate([
         {
           $match: {
-            'subscription.status': 'active'
-          }
+            "subscription.status": "active",
+          },
         },
         {
           $addFields: {
             avgScore: {
               $cond: [
-                { $gt: [{ $size: '$golfScores' }, 0] },
-                { $avg: '$golfScores.score' },
-                0
-              ]
+                { $gt: [{ $size: "$golfScores" }, 0] },
+                { $avg: "$golfScores.score" },
+                0,
+              ],
             },
-            scoreCount: { $size: '$golfScores' }
-          }
+            scoreCount: { $size: "$golfScores" },
+          },
         },
         { $sort: { avgScore: -1 } },
         { $limit: 100 },
@@ -84,26 +86,26 @@ router.get('/leaderboard/:timeframe', auth, async (req, res) => {
             profileImage: 1,
             avgScore: 1,
             scoreCount: 1,
-            totalWinnings: { $sum: '$winnings.amount' }
-          }
-        }
+            totalWinnings: { $sum: "$winnings.amount" },
+          },
+        },
       ]);
-    } else if (sortBy === 'charity') {
+    } else if (sortBy === "charity") {
       leaderboard = await User.aggregate([
         {
           $match: {
-            'subscription.status': 'active'
-          }
+            "subscription.status": "active",
+          },
         },
         {
           $addFields: {
             charityContribution: {
               $multiply: [
-                '$subscription.amount',
-                { $divide: ['$charity.percentage', 100] }
-              ]
-            }
-          }
+                "$subscription.amount",
+                { $divide: ["$charity.percentage", 100] },
+              ],
+            },
+          },
         },
         { $sort: { charityContribution: -1 } },
         { $limit: 100 },
@@ -113,22 +115,24 @@ router.get('/leaderboard/:timeframe', auth, async (req, res) => {
             firstName: 1,
             lastName: 1,
             profileImage: 1,
-            'charity.name': 1,
+            "charity.name": 1,
             charityContribution: 1,
-            'subscription.plan': 1
-          }
-        }
+            "subscription.plan": 1,
+          },
+        },
       ]);
     }
 
     // Add rank
     leaderboard = leaderboard.map((user, index) => ({
       ...user,
-      rank: index + 1
+      rank: index + 1,
     }));
 
     // Get current user rank
-    const currentUserRank = leaderboard.find(u => u._id.toString() === req.user.id);
+    const currentUserRank = leaderboard.find(
+      u => u._id.toString() === req.user.id
+    );
 
     res.json({
       success: true,
@@ -136,27 +140,29 @@ router.get('/leaderboard/:timeframe', auth, async (req, res) => {
       sortBy,
       leaderboard,
       currentUserRank: currentUserRank || null,
-      totalUsers: leaderboard.length
+      totalUsers: leaderboard.length,
     });
   } catch (error) {
-    console.error('Leaderboard error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching leaderboard' });
+    console.error("Leaderboard error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching leaderboard" });
   }
 });
 
 // GET user's rank and nearby competitors
-router.get('/leaderboard/user-rank/:userId', auth, async (req, res) => {
+router.get("/leaderboard/user-rank/:userId", auth, async (req, res) => {
   try {
     const { userId } = req.params;
 
     const allUsers = await User.aggregate([
       {
-        $match: { 'subscription.status': 'active' }
+        $match: { "subscription.status": "active" },
       },
       {
         $addFields: {
-          totalWinnings: { $sum: '$winnings.amount' }
-        }
+          totalWinnings: { $sum: "$winnings.amount" },
+        },
       },
       { $sort: { totalWinnings: -1 } },
       {
@@ -164,9 +170,9 @@ router.get('/leaderboard/user-rank/:userId', auth, async (req, res) => {
           _id: 1,
           firstName: 1,
           lastName: 1,
-          totalWinnings: 1
-        }
-      }
+          totalWinnings: 1,
+        },
+      },
     ]);
 
     const userRankIndex = allUsers.findIndex(u => u._id.toString() === userId);
@@ -184,11 +190,13 @@ router.get('/leaderboard/user-rank/:userId', auth, async (req, res) => {
       totalCompetitors: allUsers.length,
       nearbyCompetitors: nearbyCompetitors.map((u, idx) => ({
         ...u,
-        rank: Math.max(0, userRankIndex - 2) + idx + 1
-      }))
+        rank: Math.max(0, userRankIndex - 2) + idx + 1,
+      })),
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching user rank' });
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching user rank" });
   }
 });
 

@@ -20,10 +20,15 @@ interface DrawResultDistribution {
  * - 4-Number match: 35% (No rollover)
  * - 3-Number match: 25% (No rollover)
  */
-export function calculatePrizePool(input: PrizePoolInput): DrawResultDistribution {
-  const grossPool = input.totalSubscriberCount * input.subscriptionFee * input.prizePoolAllocationPercentage;
-  
-  const tier5MatchPool = (grossPool * 0.40) + input.previousJackpotRollover;
+export function calculatePrizePool(
+  input: PrizePoolInput
+): DrawResultDistribution {
+  const grossPool =
+    input.totalSubscriberCount *
+    input.subscriptionFee *
+    input.prizePoolAllocationPercentage;
+
+  const tier5MatchPool = grossPool * 0.4 + input.previousJackpotRollover;
   const tier4MatchPool = grossPool * 0.35;
   const tier3MatchPool = grossPool * 0.25;
 
@@ -31,6 +36,8 @@ export function calculatePrizePool(input: PrizePoolInput): DrawResultDistributio
     tier5MatchPool: parseFloat(tier5MatchPool.toFixed(2)),
     tier4MatchPool: parseFloat(tier4MatchPool.toFixed(2)),
     tier3MatchPool: parseFloat(tier3MatchPool.toFixed(2)),
-    totalPoolSize: parseFloat((grossPool + input.previousJackpotRollover).toFixed(2)),
+    totalPoolSize: parseFloat(
+      (grossPool + input.previousJackpotRollover).toFixed(2)
+    ),
   };
 }

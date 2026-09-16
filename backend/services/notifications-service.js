@@ -1,15 +1,15 @@
 // services/notificationService.js
-const nodemailer = require('nodemailer');
-const io = require('../socket');
-const Notification = require('../models/Notification');
+const nodemailer = require("nodemailer");
+const io = require("../socket");
+const Notification = require("../models/Notification");
 
 // Email transporter configuration
 const emailTransporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  service: process.env.EMAIL_SERVICE || "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
+    pass: process.env.EMAIL_PASSWORD,
+  },
 });
 
 class NotificationService {
@@ -28,22 +28,22 @@ class NotificationService {
         type, // 'draw', 'winner', 'subscription', 'charity', 'achievement'
         data,
         read: false,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
 
       // Send via Socket.io
-      io.to(userId).emit('notification', {
+      io.to(userId).emit("notification", {
         id: dbNotification._id,
         title,
         message,
         type,
         data,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       return dbNotification;
     } catch (error) {
-      console.error('Error sending real-time notification:', error);
+      console.error("Error sending real-time notification:", error);
       throw error;
     }
   }
@@ -62,16 +62,16 @@ class NotificationService {
       });
 
       const mailOptions = {
-        from: process.env.EMAIL_FROM || 'noreply@digitalheroes.in',
+        from: process.env.EMAIL_FROM || "noreply@digitalheroes.in",
         to: recipientEmail,
         subject,
-        html: htmlContent
+        html: htmlContent,
       };
 
       await emailTransporter.sendMail(mailOptions);
       return true;
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error("Error sending email:", error);
       throw error;
     }
   }
@@ -85,15 +85,15 @@ class NotificationService {
 
       // Real-time notification
       await this.sendRealTimeNotification(userId, {
-        title: '🎉 You Won!',
+        title: "🎉 You Won!",
         message: `You've won ₹${prizeAmount} in the ${drawDate} draw!`,
-        type: 'winner',
-        data: { prizeAmount, tier, ticketNumbers, drawDate }
+        type: "winner",
+        data: { prizeAmount, tier, ticketNumbers, drawDate },
       });
 
       // Get user email
-      const User = require('../models/User');
-      const user = await User.findById(userId).select('email firstName');
+      const User = require("../models/User");
+      const user = await User.findById(userId).select("email firstName");
 
       // Email notification
       const emailTemplate = `
@@ -123,14 +123,14 @@ class NotificationService {
           prizeAmount,
           tier,
           drawDate,
-          ticketNumbers: ticketNumbers.join(', '),
-          dashboardUrl: process.env.FRONTEND_URL + '/dashboard/winnings'
-        }
+          ticketNumbers: ticketNumbers.join(", "),
+          dashboardUrl: process.env.FRONTEND_URL + "/dashboard/winnings",
+        },
       });
 
       return true;
     } catch (error) {
-      console.error('Error notifying winner:', error);
+      console.error("Error notifying winner:", error);
       throw error;
     }
   }
@@ -140,16 +140,19 @@ class NotificationService {
    */
   static async sendDrawCountdownNotification(drawData) {
     try {
-      const User = require('../models/User');
+      const User = require("../models/User");
       const activeUsers = await User.find({
-        'subscription.status': 'active'
-      }).select('_id email firstName');
+        "subscription.status": "active",
+      }).select("_id email firstName");
 
-      const drawDate = new Date(drawData.scheduledDate).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
+      const drawDate = new Date(drawData.scheduledDate).toLocaleDateString(
+        "en-IN",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }
+      );
 
       const emailTemplate = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -174,30 +177,30 @@ class NotificationService {
       // Send to all active users
       for (const user of activeUsers) {
         // Real-time notification
-        io.to(user._id.toString()).emit('notification', {
-          title: '⏰ Draw Countdown',
+        io.to(user._id.toString()).emit("notification", {
+          title: "⏰ Draw Countdown",
           message: `Next draw in 24 hours - ${drawDate}`,
-          type: 'draw',
-          data: drawData
+          type: "draw",
+          data: drawData,
         });
 
         // Email notification
         await this.sendEmailNotification(user.email, {
-          subject: '⏰ Digital Heroes Draw - 24 Hours Countdown',
+          subject: "⏰ Digital Heroes Draw - 24 Hours Countdown",
           template: emailTemplate,
           templateVars: {
             firstName: user.firstName,
             drawDate,
             prizePool: drawData.estimatedPrizePool,
-            entries: drawData.totalEntries || 'TBD',
-            scoreEntryUrl: process.env.FRONTEND_URL + '/dashboard/scores'
-          }
+            entries: drawData.totalEntries || "TBD",
+            scoreEntryUrl: process.env.FRONTEND_URL + "/dashboard/scores",
+          },
         });
       }
 
       return true;
     } catch (error) {
-      console.error('Error sending draw countdown notification:', error);
+      console.error("Error sending draw countdown notification:", error);
       throw error;
     }
   }
@@ -207,18 +210,21 @@ class NotificationService {
    */
   static async sendSubscriptionReminder(userId, daysUntilExpiry) {
     try {
-      const User = require('../models/User');
-      const user = await User.findById(userId).select('email firstName subscription');
+      const User = require("../models/User");
+      const user = await User.findById(userId).select(
+        "email firstName subscription"
+      );
 
-      const message = daysUntilExpiry === 0 
-        ? 'Your subscription expires today!' 
-        : `Your subscription expires in ${daysUntilExpiry} days`;
+      const message =
+        daysUntilExpiry === 0
+          ? "Your subscription expires today!"
+          : `Your subscription expires in ${daysUntilExpiry} days`;
 
       await this.sendRealTimeNotification(userId, {
-        title: '📋 Subscription Reminder',
+        title: "📋 Subscription Reminder",
         message,
-        type: 'subscription',
-        data: { daysUntilExpiry, plan: user.subscription.plan }
+        type: "subscription",
+        data: { daysUntilExpiry, plan: user.subscription.plan },
       });
 
       const emailTemplate = `
@@ -242,19 +248,22 @@ class NotificationService {
       `;
 
       await this.sendEmailNotification(user.email, {
-        subject: daysUntilExpiry === 0 ? '⚠️ Subscription Expires Today' : `📋 Renew Your Subscription in ${daysUntilExpiry} Days`,
+        subject:
+          daysUntilExpiry === 0
+            ? "⚠️ Subscription Expires Today"
+            : `📋 Renew Your Subscription in ${daysUntilExpiry} Days`,
         template: emailTemplate,
         templateVars: {
           firstName: user.firstName,
           message,
           plan: user.subscription.plan.toUpperCase(),
-          renewalUrl: process.env.FRONTEND_URL + '/dashboard/subscription'
-        }
+          renewalUrl: process.env.FRONTEND_URL + "/dashboard/subscription",
+        },
       });
 
       return true;
     } catch (error) {
-      console.error('Error sending subscription reminder:', error);
+      console.error("Error sending subscription reminder:", error);
       throw error;
     }
   }
@@ -269,13 +278,13 @@ class NotificationService {
       await this.sendRealTimeNotification(userId, {
         title: `🏅 Achievement Unlocked!`,
         message: `${name}: ${description}`,
-        type: 'achievement',
-        data: { badge, reward }
+        type: "achievement",
+        data: { badge, reward },
       });
 
       return true;
     } catch (error) {
-      console.error('Error sending achievement notification:', error);
+      console.error("Error sending achievement notification:", error);
       throw error;
     }
   }
@@ -288,7 +297,7 @@ class NotificationService {
       await Notification.findByIdAndUpdate(notificationId, { read: true });
       return true;
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
       throw error;
     }
   }
@@ -302,7 +311,7 @@ class NotificationService {
         .sort({ createdAt: -1 })
         .limit(limit);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error("Error fetching notifications:", error);
       throw error;
     }
   }
@@ -315,7 +324,7 @@ class NotificationService {
       await Notification.deleteMany({ userId });
       return true;
     } catch (error) {
-      console.error('Error clearing notifications:', error);
+      console.error("Error clearing notifications:", error);
       throw error;
     }
   }
